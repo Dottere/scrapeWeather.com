@@ -1,6 +1,6 @@
 # IMPORTS
 from bs4.element import SoupStrainer
-import requests, html5lib, curses, os
+import requests, html5lib, curses, os, re
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -37,6 +37,7 @@ class sieveWeatherCom:
         stdscr.addstr(f"{self.temp}\n")
         stdscr.addstr(f"{self.tempSens}\n")
         stdscr.addstr(f"{self.moistureLVL}\n")
+        stdscr.addstr(f"{self.airPress}\n")
         stdscr.addstr(f"\nPress any key to continue...")
         k = stdscr.getch()
         stdscr.refresh()
@@ -49,11 +50,13 @@ class sieveWeatherCom:
         self.temperatureSensation = self.soup.find('span', attrs={'data-testid':'TemperatureValue'}, class_ = 'TodayDetailsCard--feelsLikeTempValue--Cf9Sl')
         self.humidity = self.soup.find('span', attrs={'data-testid':'PercentageValue'})
         self.geographicalLocation = self.soup.find('h1', class_ = 'CurrentConditions--location--kyTeL')
+        self.airPressure = self.soup.find('span', attrs={'data-testid':'PressureValue'})
         
         prettyTemp = self.temperature.prettify()
         prettyTempSens = self.temperatureSensation.prettify()
         prettyHumidity = self.humidity.prettify()
         prettyGeoLoc = self.geographicalLocation.prettify()
+        prettyAirPressure = self.airPressure.prettify()
         
         for i in prettyTemp:
             if i == '°':
@@ -81,6 +84,11 @@ class sieveWeatherCom:
         for i in prettyGeoLoc:
             if i == '>':
                 self.geoLoc = prettyGeoLoc[prettyGeoLoc.index(i)+2:prettyGeoLoc.index('/')-1]
+                
+        
+        self.airPress = f'The current air pressure is: \
+{prettyAirPressure[prettyAirPressure.find("mbar")-7:prettyAirPressure.find("mbar")+5]}'
+                
         
         return (self.temp, self.tempSens, self.moistureLVL, self.geoLoc)
 if __name__ == '__main__':
