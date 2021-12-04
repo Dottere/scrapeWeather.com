@@ -1,6 +1,6 @@
 # IMPORTS
 from bs4.element import SoupStrainer
-import requests, html5lib, curses, os, re
+import requests, html5lib, curses, os
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
@@ -37,7 +37,8 @@ class sieveWeatherCom:
         stdscr.addstr(f"{self.temp}\n")
         stdscr.addstr(f"{self.tempSens}\n")
         stdscr.addstr(f"{self.moistureLVL}\n")
-        stdscr.addstr(f"{self.airPress}\n")
+        stdscr.addstr(f"{self.airPress}")
+        stdscr.addstr(f"{self.vis}")
         stdscr.addstr(f"\nPress any key to continue...")
         k = stdscr.getch()
         stdscr.refresh()
@@ -51,12 +52,14 @@ class sieveWeatherCom:
         self.humidity = self.soup.find('span', attrs={'data-testid':'PercentageValue'})
         self.geographicalLocation = self.soup.find('h1', class_ = 'CurrentConditions--location--kyTeL')
         self.airPressure = self.soup.find('span', attrs={'data-testid':'PressureValue'})
+        self.visibility = self.soup.find('span', attrs={'data-testid':'VisibilityValue'})
         
         prettyTemp = self.temperature.prettify()
         prettyTempSens = self.temperatureSensation.prettify()
         prettyHumidity = self.humidity.prettify()
         prettyGeoLoc = self.geographicalLocation.prettify()
         prettyAirPressure = self.airPressure.prettify()
+        prettyVisibility = self.visibility.prettify()
         
         for i in prettyTemp:
             if i == '°':
@@ -74,23 +77,22 @@ class sieveWeatherCom:
        
         for i in prettyHumidity:
             if i == '%': 
-                if int(prettyHumidity[prettyHumidity.index(i)-3]) == 1: self.moistureLVL = f"The current humidity is: \
-{prettyHumidity[prettyHumidity.index(i)-3]}{prettyHumidity[prettyHumidity.index(i)-2]}{prettyHumidity[prettyHumidity.index(i)-1]}{prettyHumidity[prettyHumidity.index(i)]}"
-                elif isinstance(prettyHumidity[prettyHumidity.index(i)-3], None): self.moistureLVL = f"The current humidity is: \
-{prettyHumidity[prettyHumidity.index(i)-2]}{prettyHumidity[prettyHumidity.index(i)-1]}{prettyHumidity[prettyHumidity.index(i)]}"
-                elif isinstance(prettyHumidity[prettyHumidity.index(i)-2], None): self.moistureLVL = f"The humidity is: \
-{prettyHumidity[prettyHumidity.index(i)-1]}{prettyHumidity[prettyHumidity.index(i)]}"
+                self.moistureLVL = f"The curren't humidity is: \
+{prettyHumidity[prettyHumidity.index('%')-3:prettyHumidity.index('%')+1]}"
 
         for i in prettyGeoLoc:
             if i == '>':
-                self.geoLoc = prettyGeoLoc[prettyGeoLoc.index(i)+2:prettyGeoLoc.index('/')-1]
+                self.geoLoc = prettyGeoLoc[prettyGeoLoc.index(i)+3:prettyGeoLoc.index('/')-1]
                 
         
         self.airPress = f'The current air pressure is: \
 {prettyAirPressure[prettyAirPressure.find("mbar")-7:prettyAirPressure.find("mbar")+5]}'
+
+        self.vis = f'The current visibility is: \
+{prettyVisibility[prettyVisibility.find("km")-6:prettyVisibility.find("km")+3]}'
                 
         
-        return (self.temp, self.tempSens, self.moistureLVL, self.geoLoc)
+        return (self.temp, self.tempSens, self.moistureLVL, self.geoLoc, self.airPress)
 if __name__ == '__main__':
     sieve = sieveWeatherCom()
     sieve.Main()
